@@ -36,9 +36,9 @@ jobs:
             chmod 600 ~/.ssh/id_rsa
             ssh-keyscan -H 103.172.26.37 >> ~/.ssh/known_hosts
             # Use SCP to copy the file to the remote server
-            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no index.html user@103.172.26.37:/var/www/html/index.html
+            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no index.html root@103.172.26.37:/var/www/html/index.html
             # Optionally, restart Nginx on the server
-            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no user@103.172.26.37 "sudo systemctl restart nginx"
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@103.172.26.37 "sudo systemctl restart nginx"
 
 workflows:
   version: 2
