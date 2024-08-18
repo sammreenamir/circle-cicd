@@ -1,0 +1,54 @@
+version: 2.1
+jobs:
+ build:
+ docker:
+ - image: circleci/node:latest
+ steps:
+ - checkout
+ - run:
+ name: Build Project
+ command: echo "Building the project..."
+ test:
+ docker:
+ - image: circleci/node:latest
+ steps:
+ - checkout
+ - run:
+ name: Run Tests
+ command: echo "Running tests..."
+ deploy:
+ docker:
+ - image: circleci/python:3.8 # Docker image with SSH 
+capabilities
+ steps:
+ - checkout
+ - run:
+ name: Install SSH Client
+ command: sudo apt-get update && sudo apt-get install -y 
+openssh-client
+ - run:
+ name: Deploy index.html to Nginx
+ command: |
+ # Create SSH key for authentication
+ mkdir -p ~/.ssh
+ echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+ chmod 600 ~/.ssh/id_rsa
+ ssh-keyscan -H your_server_ip >> ~/.ssh/known_hosts
+ # Use SCP to copy the file to the remote server
+ scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no 
+index.html user@your_server_ip:/var/www/html/index.html
+ # Optionally, restart Nginx on the server
+ ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no 
+user@your_server_ip "sudo systemctl restart nginx"
+workflows:
+ version: 2
+ build_test_deploy:
+ jobs:
+ - build
+ - test:
+ requires:
+ - build
+ - deploy:
+ requires:
+ - test
+
