@@ -25,25 +25,28 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install SSH Client
-          command: sudo apt-get update && sudo apt-get install -y openssh-client expect
+          name: Install SSH Client and Expect
+          command: |
+            sudo apt-get update && sudo apt-get install -y openssh-client expect
       - run:
           name: Deploy index.html to Nginx
           command: |
             mkdir -p ~/.ssh
             ssh-keyscan -H 172.26.49.14 >> ~/.ssh/known_hosts
-            expect <<-EOF
+            # Deploy file using SCP
+            expect -c '
             spawn scp -o StrictHostKeyChecking=no ./index.html root@172.26.49.14:/var/www/html/index.html
             expect "root@172.26.49.14's password:"
             send "$SSH_PASSWORD\r"
             expect eof
-            EOF
-            expect <<-EOF
+            '
+            # Restart Nginx using SSH
+            expect -c '
             spawn ssh -o StrictHostKeyChecking=no root@172.26.49.14 "sudo systemctl restart nginx"
             expect "root@172.26.49.14's password:"
             send "$SSH_PASSWORD\r"
             expect eof
-            EOF
+            '
 
 workflows:
   version: 2
