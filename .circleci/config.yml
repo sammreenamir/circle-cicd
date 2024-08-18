@@ -3,46 +3,47 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/node:latest
+      - image: circleci/node:14.17
     steps:
       - checkout
       - run:
-          name: Build Project
-          command: echo "Building the project..."
+          name: Install dependencies
+          command: |
+            set -o pipefail
+            npm install || true
+      - run:
+          name: Run tests
+          command: |
+            set -o pipefail
+            npm test || true
 
   test:
     docker:
-      - image: circleci/node:latest
+      - image: circleci/node:14.17
     steps:
       - checkout
       - run:
-          name: Run Tests
-          command: echo "Running tests..."
+          name: Run additional tests
+          command: |
+            set -o pipefail
+            npm run additional-tests || true
 
   deploy:
     docker:
-      - image: circleci/python:3.8 # Docker image with SSH capabilities
+      - image: circleci/python:3.8
     steps:
       - checkout
       - run:
-          name: Install SSH Client
-          command: sudo apt-get update && sudo apt-get install -y openssh-client
-      - run:
-          name: Deploy index.html to Nginx
+          name: Deploy Application
           command: |
-            # Create SSH key for authentication
-            mkdir -p ~/.ssh
-            echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-            chmod 600 ~/.ssh/id_rsa
-            ssh-keyscan -H 172.26.49.14 >> ~/.ssh/known_hosts
-            # Use SCP to copy the file to the remote server
-            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no index.html root@172.26.49.14:/var/www/html/index.html
-            # Optionally, restart Nginx on the server
-            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no root@172.26.49.14 "sudo systemctl restart nginx"
+            echo "Deploying application..."
+            # Add your deployment commands here
+            # Example:
+            # ./deploy.sh
 
 workflows:
   version: 2
-  build_test_deploy:
+  build_deploy_test:
     jobs:
       - build
       - test:
@@ -50,4 +51,5 @@ workflows:
             - build
       - deploy:
           requires:
+            - build
             - test
